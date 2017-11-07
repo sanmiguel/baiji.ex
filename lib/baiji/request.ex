@@ -37,15 +37,6 @@ defmodule Baiji.Request do
   @doc """
   Generate a Request struct
   """
-  def new(%Operation{input: input, method: method} = op) when map_size(input) == 0 do
-    %Request{
-      operation: op, 
-      url: url(op), 
-      body: "", 
-      headers: [], 
-      method: method
-    }
-  end
   def new(%Operation{input: input, method: method} = op) do
     %Request{
       operation: op, 
