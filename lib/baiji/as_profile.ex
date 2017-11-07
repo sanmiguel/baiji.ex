@@ -24,8 +24,8 @@ defmodule Baiji.AsProfile do
 
   defp assume_role(op, %{ "aws_access_key_id" => keyid, "aws_secret_access_key" => key }) do
     op
-    |> Operation.assign(:access_key_id, keyid)
-    |> Operation.assign(:secret_access_key, key)
+    |> Map.put(:access_key_id, keyid)
+    |> Map.put(:secret_access_key, key)
   end
   defp assume_role(op, %{"RoleArn" => _}=input) do
     Baiji.Auth.assume_role(op, input)
