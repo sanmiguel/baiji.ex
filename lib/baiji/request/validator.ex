@@ -45,6 +45,21 @@ defmodule Baiji.Request.Validator do
     end   
   end
   def validate!(input, %{"type" => "string"}, _, _) when is_binary(input), do: :ok
+  def validate!(input, %{"type" => "blob", "min" => _, "max" => _} = shape, shapes, keys) when is_binary(input) do
+    validate!(input, Map.delete(shape, "max"), shapes, keys)
+    validate!(input, Map.delete(shape, "min"), shapes, keys)    
+  end
+  def validate!(input, %{"type" => "blob", "max" => max}, _, keys) when is_binary(input) do
+    if String.length(input) > max do
+      raise Error, message: "The value for #{format_keys(keys)} must be a blob at most #{max} bytes big"
+    end
+  end
+  def validate!(input, %{"type" => "blob", "min" => min}, _, keys) when is_binary(input) do
+    if String.length(input) < min do
+      raise Error, message: "The value for #{format_keys(keys)} must be a string at least #{min} characters big"
+    end
+  end
+  def validate!(input, %{"type" => "blob"}, _, _) when is_binary(input), do: :ok
   def validate!(input, %{"type" => "integer", "min" => min, "max" => max}, shapes, keys) when is_integer(input) do
     validate!(input, %{"type" => "integer", "min" => min}, shapes, keys)
     validate!(input, %{"type" => "integer", "max" => max}, shapes, keys)
