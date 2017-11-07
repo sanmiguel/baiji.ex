@@ -59,7 +59,7 @@ defmodule Baiji.AsProfile do
     input
   end
   defp ensure_session_name(%{}=input) do
-    %{ input | "RoleSessionName" => "baiji"}
+    Map.put(input, "RoleSessionName", "baiji")
   end
 
   def fetch(profile \\ "default") do
