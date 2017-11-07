@@ -15,7 +15,26 @@ defmodule Baiji.AsProfile do
     |> Operation.debug("Assuming profile #{ inspect profile }")
     |> assume_all(assume_stack)
     |> Baiji.perform
-    |> Operation.debug("Profile assumed?")
+  end
+
+  def inject_from(%Operation{} = dest, %Operation{} = src) do
+    dest
+    |> Map.put(:access_key_id, Map.get(src, :access_key_id))
+    |> Map.put(:secret_access_key, Map.get(src, :secret_access_key))
+    |> maybe_put(:security_token, src)
+    |> maybe_put(:session_token, src)
+  end
+  def inject_from(%Operation{} = dest, {:ok, %{}}=result) do
+    Auth.maybe_store_creds(result, dest)
+  end
+
+  defp maybe_put(dst, key, %{}=src) do
+    case src do
+      %{ ^key => val } ->
+        Map.put(dst, key, val)
+      _ ->
+        dst
+    end
   end
 
   def assume_all(%Operation{} = op, roles) do
@@ -23,16 +42,17 @@ defmodule Baiji.AsProfile do
       assume_role(op, r)
     end)
   end
-
-  defp assume_role(op, %{ "aws_access_key_id" => keyid, "aws_secret_access_key" => key }) do
+  
+  def assume_role(op, %{ "aws_access_key_id" => keyid, "aws_secret_access_key" => key }) do
     op
     |> Map.put(:access_key_id, keyid)
     |> Map.put(:secret_access_key, key)
   end
-  defp assume_role(op, %{"RoleArn" => role_arn}=input) do
-    op
-    |> Operation.debug("Assuming role #{inspect role_arn}")
-    |> Baiji.Auth.assume_role(input)
+  def assume_role(op, %{"RoleArn" => role_arn}=input) do
+    result = Baiji.STS.assume_role
+    |> inject_from(op)
+    |> Baiji.perform
+    inject_from(op, result)
   end
 
   def fetch(profile \\ "default") do
