@@ -26,7 +26,8 @@ defmodule Baiji.Mixfile do
       {:poison, "~> 3.1.0"},
       {:httpoison, "~> 0.13.0"},
       {:timex, "~> 3.1"},
-      {:ex_doc, ">= 0.0.0", only: :dev}
+      {:ex_doc, ">= 0.0.0", only: :dev},
+      {:ini, git: "https://github.com/sanmiguel/ini.git", branch: "mtc-refactor"}
     ]
   end
 
