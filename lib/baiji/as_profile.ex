@@ -46,6 +46,7 @@ defmodule Baiji.AsProfile do
   
   def assume_role(op, %{ "aws_access_key_id" => keyid, "aws_secret_access_key" => key }) do
     op
+    |> Operation.debug("#{inspect op}")
     |> Map.put(:access_key_id, keyid)
     |> Map.put(:secret_access_key, key)
   end
