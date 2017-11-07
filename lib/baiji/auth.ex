@@ -38,6 +38,11 @@ defmodule Baiji.Auth do
     |> maybe_store_creds(op)
   end
 
+  defp role_input(%{}=role_data) do
+    role_data
+    |> Map.update("RoleSessionName", @default_role_session_name,
+                  fn(current) -> current end)
+  end
   defp role_input(role_arn) when is_binary(role_arn) do
     role_input({role_arn, @default_role_session_name})
   end
