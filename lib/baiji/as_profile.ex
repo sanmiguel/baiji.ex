@@ -12,8 +12,10 @@ defmodule Baiji.AsProfile do
     # Use Baiji.perform
     assume_stack = fetch(profile)
     op
+    |> Operation.debug("Assuming profile #{ inspect profile }")
     |> assume_all(assume_stack)
     |> Baiji.perform
+    |> Operation.debug("Profile assumed?")
   end
 
   def assume_all(%Operation{} = op, roles) do
@@ -27,8 +29,10 @@ defmodule Baiji.AsProfile do
     |> Map.put(:access_key_id, keyid)
     |> Map.put(:secret_access_key, key)
   end
-  defp assume_role(op, %{"RoleArn" => _}=input) do
-    Baiji.Auth.assume_role(op, input)
+  defp assume_role(op, %{"RoleArn" => role_arn}=input) do
+    op
+    |> Operation.debug("Assuming role #{inspect role_arn}")
+    |> Baiji.Auth.assume_role(input)
   end
 
   def fetch(profile \\ "default") do
