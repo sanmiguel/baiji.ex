@@ -3,7 +3,7 @@ defmodule Baiji.AsProfile do
   Derives authentication profiles from local configuration, assumes the
   roles as appropriate and then performs a request
   """
-  alias Baiji.Operation
+  alias Baiji.{Auth, Operation}
 
   def perform(%Operation{} = op, profile \\ "default") do
     # Read credentials file
