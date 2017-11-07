@@ -30,21 +30,36 @@ defmodule Baiji.Auth do
   as an ARN, or a tuple containing the role ARN and a session name. If no session name is provided, 
   the default session name "Baiji (Elixir)" will be used instead.
   """
-  def assume_role(%Operation{options: opts} = op, {role_arn, role_session_name}) do
-    Baiji.STS.assume_role(%{"RoleArn" => role_arn, "RoleSessionName" => role_session_name})
+  def assume_role(%Operation{options: opts} = op, role_info) do
+    role_info
+    |> role_input
+    |> Baiji.STS.assume_role
     |> Baiji.perform(Keyword.delete(opts, :assume_role))
-    |> assume_role(op)
+    |> maybe_store_creds(op)
   end
-  def assume_role(%Operation{} = op, role_arn) when is_binary(role_arn) do
-    assume_role(op, {role_arn, @default_role_session_name})
+
+  defp role_input(role_arn) when is_binary(role_arn) do
+    role_input({role_arn, @default_role_session_name})
   end
-  def assume_role({:ok, %{"Credentials" => creds}}, %Operation{} = op) do
+  defp role_input({role_arn, role_session_name})
+    when is_binary(role_arn) and is_binary(role_session_name) do
+    %{"RoleArn" => role_arn, "RoleSessionName" => role_session_name}
+  end
+  defp role_input({role_arn, role_session_name, external_id}) do
+    %{"RoleArn" => role_arn, "RoleSessionName" => role_session_name,
+      "ExternalId" => external_id}
+  end
+
+  def maybe_store_creds({:ok, %{"Credentials" => creds}}, %Operation{} = op) do
     op
     |> Map.put(:access_key_id,      Map.get(creds, "AccessKeyId"))
     |> Map.put(:secret_access_key,  Map.get(creds, "SecretAccessKey"))
     |> Map.put(:security_token,     Map.get(creds, "SessionToken"))
   end
-  def assume_role({:error, _}, op), do: op
+  def maybe_store_creds({:error, error}, op) do
+    Operation.debug(op, "Failed to assume role: #{inspect error}")
+    op
+  end
 
   @doc """
   Try successive auth population methods until one of them successfully populates
