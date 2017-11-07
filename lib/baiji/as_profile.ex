@@ -19,6 +19,7 @@ defmodule Baiji.AsProfile do
 
   def inject_from(%Operation{} = dest, %Operation{} = src) do
     dest
+    |> Map.put(:region, Map.get(src, :region))
     |> Map.put(:access_key_id, Map.get(src, :access_key_id))
     |> Map.put(:secret_access_key, Map.get(src, :secret_access_key))
     |> maybe_put(:security_token, src)
