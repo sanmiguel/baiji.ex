@@ -55,6 +55,13 @@ defmodule Baiji.AsProfile do
     inject_from(op, result)
   end
 
+  defp ensure_session_name(%{"RoleSessionName" => _}=input) do
+    input
+  end
+  defp ensure_session_name(%{}=input) do
+    %{ input | "RoleSessionName" => "baiji"}
+  end
+
   def fetch(profile \\ "default") do
     # Read ini file
     home = System.get_env("HOME")
