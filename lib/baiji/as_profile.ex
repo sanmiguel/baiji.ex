@@ -3,8 +3,6 @@ defmodule Baiji.AsProfile do
   Derives authentication profiles from local configuration, assumes the
   roles as appropriate and then performs a request
   """
-  use Baiji.Auth
-  import Baiji.Core.Utilities
   alias Baiji.Operation
 
   def perform(%Operation{} = op, profile \\ :default) do
@@ -30,11 +28,11 @@ defmodule Baiji.AsProfile do
     path = home <> "/.aws/credentials"
     # File.exists?(path)
     {:ok, ini} = File.read(path)
-    profiles = Ini.parse(ini)
+    profiles = Ini.decode(ini)
     # Parse and enrich
     #  - Resolve any source_profile references
     #  - Store role_arn, account_id for assumption later
-    assume_stack = extract_assume_stack(profile, profiles)
+    extract_assume_stack(profile, profiles)
   end
 
   def extract_assume_stack(profile, profiles) do
@@ -46,9 +44,9 @@ defmodule Baiji.AsProfile do
       %{ mfa_serial: _ } ->
         exit({:unsupported_profile, profile, :mfa_serial})
       %{ source_profile: source_profile } = p ->
-        %{ role_arn: role } = p
+        # %{ role_arn: role } = p
         # TODO: Optional p = %{ external_id: extid }
-        role_deps = extract_assume_stack(profile, profiles)
+        role_deps = extract_assume_stack(source_profile, profiles)
         role_deps ++ [ p ]
       %{ aws_access_key_id: _, aws_secret_access_key: _ } = profile_data ->
         [ profile_data ]
