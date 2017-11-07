@@ -48,7 +48,7 @@ defmodule Baiji.AsProfile do
     |> Map.put(:access_key_id, keyid)
     |> Map.put(:secret_access_key, key)
   end
-  def assume_role(op, %{"RoleArn" => role_arn}=input) do
+  def assume_role(op, %{"RoleArn" => role_arn, "RoleSessionName" => _ }=input) do
     result = Baiji.STS.assume_role(input)
     |> inject_from(op)
     |> Baiji.perform
