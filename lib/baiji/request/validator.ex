@@ -70,6 +70,7 @@ defmodule Baiji.Request.Validator do
   def validate!(input, %{"type" => "integer", "max" => max}, _shapes, keys) when is_integer(input) and input > max do
     raise Error, message: "The value for #{format_keys(keys)} must be less than #{max}"
   end
+  def validate!(input, %{"type" => "integer"}, _shapes, keys) when is_integer(input), do: :ok
   def validate!(true,   %{"type" => "boolean"}, _shapes, _keys), do: :ok
   def validate!(false,  %{"type" => "boolean"}, _shapes, _keys), do: :ok
   def validate!(_,      %{"type" => "boolean"}, _shapes, keys) do
