@@ -105,18 +105,16 @@ defmodule Baiji.Response.Parser.XML do
     |> Enum.at(0)
     |> parse(shape, shapes)
   end
-  def parse(xmlElement(content: content), %{"type" => "structure", "members" => members}, shapes) do
+  #  def parse(xmlElement(content: content1), %{"type" => "structure", "members" => [%{"type" => "list", "flattened" => true}=nested_shape]}, shapes) do
+  #    # The direct children in content1 are actually of nested_shape
+  #    content1
+  #    |> parse(nested_shape, shapes)
+  #  end
+  def parse(xmlElement(content: content1), %{"type" => "structure", "members" => members}, shapes) do
     members
-    |> Map.to_list
-    |> Enum.map(fn {name, %{"shape" => shape} = val} ->
-      location = Map.get(val, "locationName", name)
-      case Enum.find(content, fn xmlElement(name: name) -> Atom.to_string(name) == location; _ -> false end) do
-        nil ->
-          {location, nil}
-        xmlElement() = c ->
-          {location, parse(c, shape, shapes)}
-      end
-    end)
+    |> Map.to_list # members1
+    |> parse_structure(content1, shapes)
+    # Now list of elements
     |> Enum.filter(fn {_, nil} -> false; _ -> true end)
     |> Map.new
   end
@@ -130,6 +128,55 @@ defmodule Baiji.Response.Parser.XML do
     content
     |> Enum.filter(fn xmlText() -> false; _ -> true end)
     |> Enum.map(fn xmlElement() = elem -> parse(elem, shape, shapes) end)
+  end
+
+  def parse_structure(members, content, shapes) do
+    # content = 
+    members # [{"QueueUrls", %{"shape" => "QueueUrlList"}}]
+    |> Enum.map(fn {name, %{"shape" => shape_name} = member} ->
+      # name = "QueueUrls"
+      # shape_name = "QueueUrlList"
+      # -> shapes["QueueUrlList"] = %{"flattened" => true,
+      #           "member" => %{"locationName" => "QueueUrl", "shape" => "String"},
+      #           "type" => "list"}
+      # If 'name' (or 'shape.locationName') points to a flattened list, 'location'
+      # will not exist in content
+      location = Map.get(member, "locationName", name)
+      parse_from_location_in_content(content, location, shape_name, shapes)
+    end)
+  end
+
+  # content = [ xmlElement(), xmlElement() ]
+  # location = ^^ name of list of elements e.g. QueueUrls
+  # shape_name = e.g. "QueueUrlList"
+  def parse_from_location_in_content(content, location, shape_name, shapes) do
+    shape = shapes[shape_name]
+    # When shapes[shape]
+    # Find in content (children of a node)
+    case shape do
+      %{ "type" => "list", "flattened" => true, "member" => member} ->
+        # Elements in this content are actually of shape list_member_def
+        # Do we need to return:
+        # %{ "QueueUrlList" => [ %{ "QueueUrl" => "..." }, ... ] }
+        # OR
+        # [ %{ "QueueUrl" => " ... " }, ... ]
+        {member_shape, member_location} = shape_and_location(member)
+        list_elements = content 
+                        |> Enum.filter(fn(xmlElement()) -> true; (_) -> false end) 
+                        |> Enum.map(fn(c) -> parse(c, member_shape, shapes) end) 
+        { location, list_elements }
+      _ ->
+        case Enum.find(content, fn(xmlElement(name: name)) -> Atom.to_string(name) == location; _ -> false end) do
+          nil ->
+            {location, nil}
+          xmlElement() = c ->
+            {location, parse(c, shape_name, shapes)}
+        end
+    end
+  end
+
+  defp shape_and_location(%{ "shape" => member_shape, "locationName" => member_location }) do
+    {member_shape, member_location}
   end
 
   def trim(content) when is_list(content) do

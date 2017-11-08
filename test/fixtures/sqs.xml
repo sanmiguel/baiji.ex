@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<ListQueuesResponse xmlns="http://queue.amazonaws.com/doc/2012-11-05/">
+    <ListQueuesResult>
+        <QueueUrl>https://sqs.us-west-2.amazonaws.com/128736112324/foo-bar-bindings</QueueUrl>
+        <QueueUrl>https://sqs.us-west-2.amazonaws.com/128736112324/foo-bar-tasks</QueueUrl>
+    </ListQueuesResult>
+    <ResponseMetadata>
+        <RequestId>f9809a82-b217-5e03-ba9f-d8fe596383f4</RequestId>
+    </ResponseMetadata>
+</ListQueuesResponse>

@@ -1,0 +1,6 @@
+{
+  "QueueUrls": [
+          "https://sqs.us-west-2.amazonaws.com/128736112324/foo-bar-bindings",
+          "https://sqs.us-west-2.amazonaws.com/128736112324/foo-bar-tasks"
+      ]
+}

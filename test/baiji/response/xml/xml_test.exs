@@ -1,6 +1,21 @@
 defmodule Baiji.Response.Parser.XMLTest do
   use ExUnit.Case
 
+  test "correctly parses SQS XML response" do
+    xml = Path.expand('../../../fixtures/sqs.xml', __DIR__)
+          |> File.read!
+
+    json = Path.expand('../../../fixtures/sqs.json', __DIR__)
+           |> File.read!
+           |> Poison.decode!
+
+    result = Baiji.Response.Parser.XML.parse!(xml, Baiji.SQS.list_queues())
+             |> Poison.encode!
+             |> Poison.decode!
+
+    assert result == json
+  end
+
   test "correctly parses EC2 XML response" do
     xml = Path.expand('../../../fixtures/ec2.xml', __DIR__)
     |> File.read!
